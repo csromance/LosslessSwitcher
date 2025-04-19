@@ -59,7 +59,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.instance = self
         outputDevices = OutputDevices()
-        mrController = MediaRemoteController(outputDevices: outputDevices)
+        if #available(macOS 15.4, *) {
+            // On macOS 15.4+ use fallback via Music distributed notification
+            DistributedNotificationCenter.default.addObserver(
+                self,
+                selector: #selector(trackChanged(_:)),
+                name: NSNotification.Name("com.apple.Music.playerInfo"),
+                object: nil
+            )
+        } else {
+            mrController = MediaRemoteController(outputDevices: outputDevices)
+        }
         
         checkPermissions()
         
@@ -206,6 +216,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Defaults.shared.shellScriptPath = nil
     }
     
+    @objc func trackChanged(_ notification: Notification) {
+        outputDevices.switchLatestSampleRate()
+        performPlaybackReset()
+    }
+    
+    func performPlaybackReset() {
+        let appleScript = """
+            tell application "Music"
+                if player state is playing then
+                    pause
+                    delay 0.5
+                    play
+                end if
+            end tell
+            """
+        if let script = NSAppleScript(source: appleScript) {
+            script.executeAndReturnError(nil)
+        }
+    }
 }
 
 extension AppDelegate: NSMenuDelegate {
