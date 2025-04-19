@@ -19,7 +19,6 @@ class User {
         guard CSIdentityQueryExecute(query, flags, nil) else { throw QueryError.queryExecutionFailed }
         
         let users = CSIdentityQueryCopyResults(query).takeRetainedValue() as! Array<CSIdentity>
-
         guard let currentUser = users.first else { throw QueryError.queriedWithoutResult }
         
         return currentUser
