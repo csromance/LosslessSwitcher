@@ -42,10 +42,21 @@ class User {
         return adminGroup
     }
     
-    func isAdmin() throws -> Bool {
-        let user = try self.getUser()
-        let group = try self.getAdminGroup()
-        return CSIdentityIsMemberOfGroup(user, group)
+    /// Asynchronous check to avoid blocking the main thread and prevent priority inversions.
+    func isAdmin(completion: @escaping (Bool) -> Void) {
+        Task.detached(priority: .medium) {
+            let result: Bool
+            do {
+                let user = try self.getUser()
+                let group = try self.getAdminGroup()
+                result = CSIdentityIsMemberOfGroup(user, group)
+            } catch {
+                result = false
+            }
+            await MainActor.run {
+                completion(result)
+            }
+        }
     }
     
     enum QueryError: Error {

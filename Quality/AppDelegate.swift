@@ -33,21 +33,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func checkPermissions() {
-        do {
-            if try !User.current.isAdmin() {
-                let alert = NSAlert()
-                alert.messageText = "Requires Privileges"
-                alert.informativeText = "LosslessSwitcher requires Administrator privileges to detect lossless sample rates."
-                alert.alertStyle = .critical
-                alert.runModal()
-                NSApp.terminate(self)
+        User.current.isAdmin { isAdmin in
+            DispatchQueue.main.async {
+                if !isAdmin {
+                    let alert = NSAlert()
+                    alert.messageText = "Requires Privileges"
+                    alert.informativeText = "LosslessSwitcher requires Administrator privileges to detect lossless sample rates."
+                    alert.alertStyle = .critical
+                    alert.runModal()
+                    NSApp.terminate(self)
+                }
             }
-        } catch {
-            let alert = NSAlert()
-            alert.messageText = "Requires Privileges"
-            alert.informativeText = "Could not verify admin privileges; sample rate detection may not work."
-            alert.alertStyle = .warning
-            alert.runModal()
         }
     }
 
