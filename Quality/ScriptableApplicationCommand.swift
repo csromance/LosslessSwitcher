@@ -8,7 +8,7 @@
 import Cocoa
 
 class ScriptableApplicationCommand: NSScriptCommand {
-    
+
     override func performDefaultImplementation() -> Any? {
         guard let delegate = AppDelegate.instance else {
             return -1000

@@ -7,8 +7,8 @@
 
 import Cocoa
 import Combine
-import SwiftUI
 import SimplyCoreAudio
+import SwiftUI
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     static private(set) var instance: AppDelegate! = nil
@@ -38,7 +38,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 if !isAdmin {
                     let alert = NSAlert()
                     alert.messageText = "Requires Privileges"
-                    alert.informativeText = "LosslessSwitcher requires Administrator privileges to detect lossless sample rates."
+                    alert.informativeText =
+                        "LosslessSwitcher requires Administrator privileges to detect lossless sample rates."
                     alert.alertStyle = .critical
                     alert.runModal()
                     NSApp.terminate(self)
@@ -78,20 +79,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
 
         // Toggle status item title
-        let titleItem = NSMenuItem(title: defaults.statusBarItemTitle,
-                                   action: #selector(toggleSampleRate(item:)),
-                                   keyEquivalent: "")
+        let titleItem = NSMenuItem(
+            title: defaults.statusBarItemTitle,
+            action: #selector(toggleSampleRate(item:)),
+            keyEquivalent: ""
+        )
         menu.addItem(titleItem)
 
         // Bit depth switch
-        let bitDepthItem = NSMenuItem(title: "Bit Depth Switching",
-                                      action: #selector(toggleBitDepthDetection(item:)),
-                                      keyEquivalent: "")
+        let bitDepthItem = NSMenuItem(
+            title: "Bit Depth Switching",
+            action: #selector(toggleBitDepthDetection(item:)),
+            keyEquivalent: ""
+        )
         bitDepthItem.state = defaults.userPreferBitDepthDetection ? .on : .off
         menu.addItem(bitDepthItem)
 
         // Devices submenu
-        let devicesItem = NSMenuItem(title: "Selected Device", action: nil, keyEquivalent: "")
+        let devicesItem = NSMenuItem(
+            title: "Selected Device",
+            action: nil,
+            keyEquivalent: ""
+        )
         devicesMenu = NSMenu()
         devicesItem.submenu = devicesMenu
         menu.addItem(devicesItem)
@@ -100,25 +109,47 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
 
         // About submenu
-        let aboutItem = NSMenuItem(title: "About", action: nil, keyEquivalent: "")
-        let version = NSMenuItem(title: "Version - \(currentVersion)", action: nil, keyEquivalent: "")
-        let build    = NSMenuItem(title: "Build   - \(currentBuild)", action: nil, keyEquivalent: "")
+        let aboutItem = NSMenuItem(
+            title: "About",
+            action: nil,
+            keyEquivalent: ""
+        )
+        let version = NSMenuItem(
+            title: "Version - \(currentVersion)",
+            action: nil,
+            keyEquivalent: ""
+        )
+        let build = NSMenuItem(
+            title: "Build   - \(currentBuild)",
+            action: nil,
+            keyEquivalent: ""
+        )
         aboutItem.submenu = NSMenu()
         aboutItem.submenu?.addItem(version)
         aboutItem.submenu?.addItem(build)
         menu.addItem(aboutItem)
 
         // Scripting submenu
-        let scriptItem = NSMenuItem(title: "Scripting", action: nil, keyEquivalent: "")
-        let selectScript = NSMenuItem(title: "Select Script…",
-                                      action: #selector(selectScript(_:)),
-                                      keyEquivalent: "")
-        let clearScript = NSMenuItem(title: "Clear selection",
-                                     action: #selector(resetScript(_:)),
-                                     keyEquivalent: "")
-        currentScriptSelectionMenuItem = NSMenuItem(title: "No selection",
-                                                    action: nil,
-                                                    keyEquivalent: "")
+        let scriptItem = NSMenuItem(
+            title: "Scripting",
+            action: nil,
+            keyEquivalent: ""
+        )
+        let selectScript = NSMenuItem(
+            title: "Select Script…",
+            action: #selector(selectScript(_:)),
+            keyEquivalent: ""
+        )
+        let clearScript = NSMenuItem(
+            title: "Clear selection",
+            action: #selector(resetScript(_:)),
+            keyEquivalent: ""
+        )
+        currentScriptSelectionMenuItem = NSMenuItem(
+            title: "No selection",
+            action: nil,
+            keyEquivalent: ""
+        )
         scriptItem.submenu = NSMenu()
         scriptItem.submenu?.addItem(selectScript)
         scriptItem.submenu?.addItem(clearScript)
@@ -128,35 +159,44 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
 
         // Quit
-        let quitItem = NSMenuItem(title: "Quit",
-                                  action: #selector(NSApp.terminate(_:)),
-                                  keyEquivalent: "")
+        let quitItem = NSMenuItem(
+            title: "Quit",
+            action: #selector(NSApp.terminate(_:)),
+            keyEquivalent: ""
+        )
         menu.addItem(quitItem)
 
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem = NSStatusBar.system.statusItem(
+            withLength: NSStatusItem.variableLength
+        )
         statusItem?.menu = menu
         statusItem?.button?.title = "Loading..."
         statusItemDisplay()
 
         // Listen for device list changes to rebuild menu
-        cancellable = NotificationCenter.default.publisher(for: .deviceListChanged)
-            .sink { [weak self] _ in
-                self?.handleDevicesMenu()
-            }
+        cancellable = NotificationCenter.default.publisher(
+            for: .deviceListChanged
+        )
+        .sink { [weak self] _ in
+            self?.handleDevicesMenu()
+        }
     }
 
     func handleDevicesMenu() {
         devicesMenu.removeAllItems()
-        let auto = DeviceMenuItem(title: "Default Device",
-                                  action: #selector(deviceSelection(_:)),
-                                  keyEquivalent: "",
-                                  device: nil)
+        let auto = DeviceMenuItem(
+            title: "Default Device",
+            action: #selector(deviceSelection(_:)),
+            keyEquivalent: "",
+            device: nil
+        )
         auto.tag = -1
         devicesMenu.addItem(auto)
 
         let selectedUID = Defaults.shared.selectedDeviceUID
         if let uid = selectedUID,
-           outputDevices.outputDevices.contains(where: { $0.uid == uid }) {
+            outputDevices.outputDevices.contains(where: { $0.uid == uid })
+        {
             // keep selection
         } else {
             auto.state = .on
@@ -164,10 +204,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         for (idx, device) in outputDevices.outputDevices.enumerated() {
-            let item = DeviceMenuItem(title: device.name,
-                                      action: #selector(deviceSelection(_:)),
-                                      keyEquivalent: "",
-                                      device: device)
+            let item = DeviceMenuItem(
+                title: device.name,
+                action: #selector(deviceSelection(_:)),
+                keyEquivalent: "",
+                device: device
+            )
             item.tag = idx
             if device.uid == Defaults.shared.selectedDeviceUID {
                 item.state = .on
@@ -186,8 +228,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func statusItemDisplay() {
         if defaults.userPreferIconStatusBarItem {
-            statusItem?.button?.image = NSImage(systemSymbolName: "music.note",
-                                                accessibilityDescription: nil)
+            statusItem?.button?.image = NSImage(
+                systemSymbolName: "music.note",
+                accessibilityDescription: nil
+            )
             statusItem?.button?.title = ""
         } else {
             statusItem?.button?.image = nil
@@ -203,7 +247,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func toggleBitDepthDetection(item: NSMenuItem) {
         Task {
-            await defaults.setPreferBitDepthDetection(newValue: !defaults.userPreferBitDepthDetection)
+            await defaults.setPreferBitDepthDetection(
+                newValue: !defaults.userPreferBitDepthDetection
+            )
             item.state = defaults.userPreferBitDepthDetection ? .on : .off
         }
     }
@@ -225,7 +271,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func trackChanged(_ notification: Notification) {
         guard let info = notification.userInfo as? [String: Any],
-              let rawPID = info["PersistentID"] ?? info["Persistent ID"] else {
+            let rawPID = info["PersistentID"] ?? info["Persistent ID"]
+        else {
             return
         }
         let pid = String(describing: rawPID)
@@ -240,6 +287,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
-        currentScriptSelectionMenuItem?.title = Defaults.shared.shellScriptPath ?? "No selection"
+        currentScriptSelectionMenuItem?.title =
+            Defaults.shared.shellScriptPath ?? "No selection"
     }
 }

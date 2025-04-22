@@ -9,29 +9,39 @@ import Foundation
 
 class Defaults: ObservableObject {
     static let shared = Defaults()
-    private let kUserPreferIconStatusBarItem = "com.vincent-neo.LosslessSwitcher-Key-UserPreferIconStatusBarItem"
-    private let kSelectedDeviceUID = "com.vincent-neo.LosslessSwitcher-Key-SelectedDeviceUID"
-    private let kUserPreferBitDepthDetection = "com.vincent-neo.LosslessSwitcher-Key-BitDepthDetection"
+    private let kUserPreferIconStatusBarItem =
+        "com.vincent-neo.LosslessSwitcher-Key-UserPreferIconStatusBarItem"
+    private let kSelectedDeviceUID =
+        "com.vincent-neo.LosslessSwitcher-Key-SelectedDeviceUID"
+    private let kUserPreferBitDepthDetection =
+        "com.vincent-neo.LosslessSwitcher-Key-BitDepthDetection"
     private let kShellScriptPath = "KeyShellScriptPath"
-    
+
     private init() {
         UserDefaults.standard.register(defaults: [
-            kUserPreferIconStatusBarItem : true,
-            kUserPreferBitDepthDetection : false
+            kUserPreferIconStatusBarItem: true,
+            kUserPreferBitDepthDetection: false,
         ])
-        
-        self.userPreferBitDepthDetection = UserDefaults.standard.bool(forKey: kUserPreferBitDepthDetection)
+
+        self.userPreferBitDepthDetection = UserDefaults.standard.bool(
+            forKey: kUserPreferBitDepthDetection
+        )
     }
-    
+
     var userPreferIconStatusBarItem: Bool {
         get {
-            return UserDefaults.standard.bool(forKey: kUserPreferIconStatusBarItem)
+            return UserDefaults.standard.bool(
+                forKey: kUserPreferIconStatusBarItem
+            )
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: kUserPreferIconStatusBarItem)
+            UserDefaults.standard.set(
+                newValue,
+                forKey: kUserPreferIconStatusBarItem
+            )
         }
     }
-    
+
     var selectedDeviceUID: String? {
         get {
             return UserDefaults.standard.string(forKey: kSelectedDeviceUID)
@@ -40,7 +50,7 @@ class Defaults: ObservableObject {
             UserDefaults.standard.set(newValue, forKey: kSelectedDeviceUID)
         }
     }
-    
+
     var shellScriptPath: String? {
         get {
             return UserDefaults.standard.string(forKey: kShellScriptPath)
@@ -49,17 +59,20 @@ class Defaults: ObservableObject {
             UserDefaults.standard.setValue(newValue, forKey: kShellScriptPath)
         }
     }
-    
+
     @Published var userPreferBitDepthDetection: Bool
-    
-    
+
     @MainActor func setPreferBitDepthDetection(newValue: Bool) {
-        UserDefaults.standard.set(newValue, forKey: kUserPreferBitDepthDetection)
+        UserDefaults.standard.set(
+            newValue,
+            forKey: kUserPreferBitDepthDetection
+        )
         self.userPreferBitDepthDetection = newValue
     }
 
     var statusBarItemTitle: String {
-        let title = self.userPreferIconStatusBarItem ? "Show Sample Rate" : "Show Icon"
+        let title =
+            self.userPreferIconStatusBarItem ? "Show Sample Rate" : "Show Icon"
         return title
     }
 }

@@ -6,9 +6,9 @@
 //
 
 import Combine
+import CoreAudioTypes
 import Foundation
 import SimplyCoreAudio
-import CoreAudioTypes
 
 class OutputDevices: ObservableObject {
     @Published var selectedOutputDevice: AudioDevice?
@@ -25,18 +25,22 @@ class OutputDevices: ObservableObject {
         self.defaultOutputDevice = coreAudio.defaultOutputDevice
         getDeviceSampleRate()
 
-        changesCancellable = NotificationCenter.default.publisher(for: .deviceListChanged)
-            .sink { [weak self] _ in
-                guard let self = self else { return }
-                self.outputDevices = self.coreAudio.allOutputDevices
-            }
+        changesCancellable = NotificationCenter.default.publisher(
+            for: .deviceListChanged
+        )
+        .sink { [weak self] _ in
+            guard let self = self else { return }
+            self.outputDevices = self.coreAudio.allOutputDevices
+        }
 
-        defaultChangesCancellable = NotificationCenter.default.publisher(for: .defaultOutputDeviceChanged)
-            .sink { [weak self] _ in
-                guard let self = self else { return }
-                self.defaultOutputDevice = self.coreAudio.defaultOutputDevice
-                self.getDeviceSampleRate()
-            }
+        defaultChangesCancellable = NotificationCenter.default.publisher(
+            for: .defaultOutputDeviceChanged
+        )
+        .sink { [weak self] _ in
+            guard let self = self else { return }
+            self.defaultOutputDevice = self.coreAudio.defaultOutputDevice
+            self.getDeviceSampleRate()
+        }
 
     }
 
@@ -46,7 +50,10 @@ class OutputDevices: ObservableObject {
     }
 
     func getDeviceSampleRate() {
-        guard let rate = (selectedOutputDevice ?? defaultOutputDevice)?.nominalSampleRate else { return }
+        guard
+            let rate = (selectedOutputDevice ?? defaultOutputDevice)?
+                .nominalSampleRate
+        else { return }
         updateSampleRate(rate)
     }
 
@@ -72,7 +79,9 @@ class OutputDevices: ObservableObject {
             stats = allStats
         }
         guard let stat = stats.first else { return }
-        guard let device = selectedOutputDevice ?? defaultOutputDevice else { return }
+        guard let device = selectedOutputDevice ?? defaultOutputDevice else {
+            return
+        }
 
         if Defaults.shared.userPreferBitDepthDetection {
             // Full format switch (sample rate + bit depth)
@@ -91,7 +100,10 @@ class OutputDevices: ObservableObject {
         DispatchQueue.main.async {
             let readable = sampleRate / 1000
             self.currentSampleRate = readable
-            AppDelegate.instance.statusItemTitle = String(format: "%.1f kHz", readable)
+            AppDelegate.instance.statusItemTitle = String(
+                format: "%.1f kHz",
+                readable
+            )
         }
         runUserScript(sampleRate)
     }
@@ -109,14 +121,19 @@ class OutputDevices: ObservableObject {
     }
 
     /// Chooses and applies the best available audio format (sample rate + bit depth) on the device.
-    private func applyBestFormat(for stat: CMPlayerStats, on device: AudioDevice) {
+    private func applyBestFormat(
+        for stat: CMPlayerStats,
+        on device: AudioDevice
+    ) {
         // Get the output streams and their available formats
         guard let streams = device.streams(scope: .output),
-              let stream = streams.first,
-              let availableFormats = stream.availablePhysicalFormats?.map({ $0.mFormat })
+            let stream = streams.first,
+            let availableFormats = stream.availablePhysicalFormats?.map({
+                $0.mFormat
+            })
         else { return }
 
-        let targetRate  = stat.sampleRate
+        let targetRate = stat.sampleRate
         let targetDepth = stat.bitDepth
 
         // Find the format with minimal combined delta of rate and depth

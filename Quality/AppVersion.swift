@@ -8,4 +8,5 @@
 import Foundation
 
 let currentBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as! String
-let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String
+let currentVersion =
+    Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String

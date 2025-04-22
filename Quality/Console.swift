@@ -6,8 +6,8 @@
 //
 // https://developer.apple.com/forums/thread/677068
 
-import OSLog
 import Cocoa
+import OSLog
 
 struct SimpleConsole {
     let date: Date
@@ -18,9 +18,12 @@ enum EntryType: String {
     case music = "com.apple.Music"
     case coreAudio = "com.apple.coreaudio"
     case coreMedia = "com.apple.coremedia"
-    
+
     var predicate: NSPredicate {
-        NSPredicate(format: "(subsystem = %@) AND (process = %@)", argumentArray: [rawValue, "Music"])
+        NSPredicate(
+            format: "(subsystem = %@) AND (process = %@)",
+            argumentArray: [rawValue, "Music"]
+        )
     }
 }
 
@@ -29,14 +32,21 @@ class Console {
         var messages = [SimpleConsole]()
         let store = try OSLogStore.local()
         let duration = store.position(timeIntervalSinceEnd: -3.0)
-        let entries = try store.getEntries(with: [], at: duration, matching: type.predicate)
+        let entries = try store.getEntries(
+            with: [],
+            at: duration,
+            matching: type.predicate
+        )
         // for some reason AnySequence to Array turns it into a empty array?
         for entry in entries {
-            let consoleMessage = SimpleConsole(date: entry.date, message: entry.composedMessage)
+            let consoleMessage = SimpleConsole(
+                date: entry.date,
+                message: entry.composedMessage
+            )
             //print((date: entry.date, message: entry.composedMessage))
             messages.append(consoleMessage)
         }
-        
+
         return messages.reversed()
     }
 }
