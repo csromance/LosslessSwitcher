@@ -9,7 +9,6 @@ import Combine
 import Foundation
 import SimplyCoreAudio
 import CoreAudioTypes
-import OSLog
 
 class OutputDevices: ObservableObject {
     @Published var selectedOutputDevice: AudioDevice?
@@ -39,26 +38,6 @@ class OutputDevices: ObservableObject {
                 self.getDeviceSampleRate()
             }
 
-        // Stream Music.app logs to detect mediaFormatinfo lines immediately
-        DispatchQueue.global(qos: .background).async {
-            guard let store = try? OSLogStore.local() else { return }
-            var position = store.position(timeIntervalSinceEnd: 0)
-            while true {
-                if let entries = try? store.getEntries(with: [], at: position) {
-                    position = store.position(timeIntervalSinceEnd: 0)
-                    for case let entry as OSLogEntryLog in entries {
-                        let msg = entry.composedMessage
-                        if msg.contains("mediaFormatinfo") {
-                            DispatchQueue.main.async {
-                                self.switchLatestSampleRate()
-                            }
-                            break
-                        }
-                    }
-                }
-                usleep(10_000) // 10ms pause to avoid busy loop
-            }
-        }
     }
 
     deinit {
