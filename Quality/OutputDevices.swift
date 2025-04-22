@@ -56,7 +56,7 @@ class OutputDevices: ObservableObject {
                         }
                     }
                 }
-                usleep(100_000) // 100ms pause to avoid busy loop
+                usleep(10_000) // 10ms pause to avoid busy loop
             }
         }
     }
