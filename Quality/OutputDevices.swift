@@ -9,6 +9,7 @@ import Combine
 import Foundation
 import SimplyCoreAudio
 import CoreAudioTypes
+import OSLog
 
 class OutputDevices: ObservableObject {
     @Published var selectedOutputDevice: AudioDevice?
@@ -37,6 +38,27 @@ class OutputDevices: ObservableObject {
                 self.defaultOutputDevice = self.coreAudio.defaultOutputDevice
                 self.getDeviceSampleRate()
             }
+
+        // Stream Music.app logs to detect mediaFormatinfo lines immediately
+        DispatchQueue.global(qos: .background).async {
+            guard let store = try? OSLogStore.local() else { return }
+            var position = store.position(timeIntervalSinceEnd: 0)
+            while true {
+                if let entries = try? store.getEntries(with: [], at: position) {
+                    position = store.position(timeIntervalSinceEnd: 0)
+                    for case let entry as OSLogEntryLog in entries {
+                        let msg = entry.composedMessage
+                        if msg.contains("mediaFormatinfo") {
+                            DispatchQueue.main.async {
+                                self.switchLatestSampleRate()
+                            }
+                            break
+                        }
+                    }
+                }
+                usleep(100_000) // 100ms pause to avoid busy loop
+            }
+        }
     }
 
     deinit {
@@ -61,12 +83,20 @@ class OutputDevices: ObservableObject {
 
     func switchLatestSampleRate() {
         let stats = getAllStats()
-        guard let latest = stats.first else { return }
-        let newRate = Double(latest.sampleRate)
-        guard let device = selectedOutputDevice ?? defaultOutputDevice,
-              newRate != device.nominalSampleRate else { return }
-        device.setNominalSampleRate(newRate)
-        updateSampleRate(newRate)
+        guard let stat = stats.first else { return }
+        guard let device = selectedOutputDevice ?? defaultOutputDevice else { return }
+
+        if Defaults.shared.userPreferBitDepthDetection {
+            // Full format switch (sample rate + bit depth)
+            applyBestFormat(for: stat, on: device)
+        } else {
+            // Sample-rate only
+            let newRate = Double(stat.sampleRate)
+            if newRate != device.nominalSampleRate {
+                device.setNominalSampleRate(newRate)
+                updateSampleRate(newRate)
+            }
+        }
     }
 
     func updateSampleRate(_ sampleRate: Float64) {
@@ -87,6 +117,36 @@ class OutputDevices: ObservableObject {
                 try await task.execute(withArguments: [arg])
             } catch {
             }
+        }
+    }
+
+    /// Chooses and applies the best available audio format (sample rate + bit depth) on the device.
+    private func applyBestFormat(for stat: CMPlayerStats, on device: AudioDevice) {
+        // Get the output streams and their available formats
+        guard let streams = device.streams(scope: .output),
+              let stream = streams.first,
+              let availableFormats = stream.availablePhysicalFormats?.map({ $0.mFormat })
+        else { return }
+
+        let targetRate  = stat.sampleRate
+        let targetDepth = stat.bitDepth
+
+        // Find the format with minimal combined delta of rate and depth
+        let bestFormat = availableFormats.min { a, b in
+            let rateDeltaA = abs(a.mSampleRate - targetRate)
+            let rateDeltaB = abs(b.mSampleRate - targetRate)
+            if rateDeltaA != rateDeltaB {
+                return rateDeltaA < rateDeltaB
+            }
+            let depthDeltaA = abs(Int(a.mBitsPerChannel) - targetDepth)
+            let depthDeltaB = abs(Int(b.mBitsPerChannel) - targetDepth)
+            return depthDeltaA < depthDeltaB
+        }
+
+        // Apply if different
+        if let fmt = bestFormat, stream.physicalFormat != fmt {
+            stream.physicalFormat = fmt
+            updateSampleRate(fmt.mSampleRate)
         }
     }
 }
