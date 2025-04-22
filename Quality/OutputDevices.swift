@@ -60,8 +60,17 @@ class OutputDevices: ObservableObject {
         }
     }
 
-    func switchLatestSampleRate() {
-        let stats = getAllStats()
+    func switchLatestSampleRate(since: Date? = nil) {
+        // Filter stats to only those logged after the given timestamp, if provided
+        let allStats = getAllStats()
+        let stats: [CMPlayerStats]
+        if let sinceDate = since {
+            stats = allStats.filter { stat in
+                stat.date > sinceDate
+            }
+        } else {
+            stats = allStats
+        }
         guard let stat = stats.first else { return }
         guard let device = selectedOutputDevice ?? defaultOutputDevice else { return }
 

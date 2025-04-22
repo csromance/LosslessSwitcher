@@ -231,8 +231,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let pid = String(describing: rawPID)
         guard pid != lastPersistentID else { return }
         lastPersistentID = pid
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.outputDevices.switchLatestSampleRate()
+        let changeTime = Date()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            self.outputDevices.switchLatestSampleRate(since: changeTime)
         }
     }
 }
